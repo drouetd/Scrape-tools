@@ -1,0 +1,5 @@
+beautifulsoup4==4.4.1
+html5lib==0.9999999
+selenium==2.53.1
+six==1.10.0
+wheel==0.26.0
