@@ -26,6 +26,7 @@ def get_html(url=None):
 
 
 def write_to_csv(filename, fields, records):
+	""" Writes a list of dictionaries to a csv file. """
 	
 	with open(filename, 'wb') as csvfile:
 		writer = csv.DictWriter(csvfile, fieldnames=fields, delimiter=',',quotechar='"',quoting=csv.QUOTE_ALL)
