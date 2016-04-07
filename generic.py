@@ -5,13 +5,10 @@ import csv
 from selenium import webdriver
 from selenium.webdriver.support.ui import WebDriverWait
 import parsers
-#from bs4 import BeautifulSoup
 
 
 def get_html(url=None):
-	"""
-	Returns the raw html for a given url
-	"""
+	""" Returns the raw html for a given url """
 	
 	driver = webdriver.PhantomJS()
 	driver.get(url)
@@ -31,9 +28,8 @@ def get_html(url=None):
 def write_to_csv(filename, fields, records):
 	
 	with open(filename, 'wb') as csvfile:
-		#fieldnames = ['name', 'phone', 'email', 'website']
 		writer = csv.DictWriter(csvfile, fieldnames=fields, delimiter=',',quotechar='"',quoting=csv.QUOTE_ALL)
-		#writer.writeheader()
+		# writer.writeheader()
 		for rec in records:
 			try:
 				writer.writerow(rec)
