@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+# -*- coding: utf-8 -*-
 
 import sys
 import re
@@ -16,8 +16,10 @@ def parse_mesi_company_page(raw_html):
 	name = soup.find_all('font', size="5")
 	if name:
 		record['name'] = clean_name(name)
+		print "Name:", record['name']
 		
 	bolds = soup.find_all('b')
+	items = [unicode(x) for x in bolds]
 	
 	# get contact name and title
 	contacts = unicode(bolds[0].parent.next_sibling)
@@ -26,48 +28,71 @@ def parse_mesi_company_page(raw_html):
 		firstmatch = re.compile("^.*>(.*)<br/>")
 		secondmatch = re.compile("(.*)</td>")
 		match1 = re.search(firstmatch, contacts).group(1)
-		#print "match1:", match1
 		separated = split_name_and_title(match1)
 		record['contact1'] = separated[0]
-		record['title1'] = separated[1]
+		if len(separated) > 1:
+			record['title1'] = separated[1]
 		
 		match2 = re.search(secondmatch, contacts).group(1)
-		#print "match2:", match2
 		separated = split_name_and_title(match2)
 		record['contact2'] = separated[0]
-		record['title2'] = separated[1]
+		if len(separated) > 1:
+			record['title2'] = separated[1]
 	else:
 		separated = split_name_and_title(bolds[0].parent.next_sibling.string)
 		record['contact1'] = separated[0]
-		record['title1'] = separated[1]
+		if len(separated) > 1:
+			record['title1'] = separated[1]
 	
 	# get phone
 	phone = bolds[1].parent.next_sibling.string
 	record['phone'] = phone.strip()
 	
 	# get fax
-	fax = bolds[2].parent.next_sibling.string
-	record['fax'] = fax.strip()
+	try:
+		idx = items.index("<b>Télécopieur:</b>")
+		fax = bolds[idx].parent.next_sibling.string
+		record['fax'] = fax.strip()
+	except:
+		record['fax'] = ''
+		print "%s no fax for %s." % (sys.exc_info()[0].__name__, record['name'])
 	
 	# get email
-	email = bolds[3].parent.next_sibling.string
-	record['email'] = email.strip()
+	try:
+		idx = items.index("<b>Courriel:</b>")
+		email = bolds[idx].parent.next_sibling.string
+		record['email'] = email.strip()
+	except:
+		record['email'] = ''
+		print "%s no email for %s." % (sys.exc_info()[0].__name__, record['name'])
 	
 	# get website
-	website = bolds[4].parent.next_sibling.string
-	record['website'] = website.strip()
+	try:
+		idx = items.index("<b>Site web:</b>")
+		website = bolds[idx].parent.next_sibling.string
+		record['website'] = website.strip()
+	except:
+		record['website'] = ''
+		print "%s no website for %s." % (sys.exc_info()[0].__name__, record['name'])
 	
 	# description
-	description = list(bolds[6].next_siblings)
-	record['description'] = description[3].strip()
+	try:
+		idx = items.index("<b>Domaines d'activités</b>")
+		description = list(bolds[idx].next_siblings)
+		record['description'] = description[3].strip()
+	except:
+		record['description'] = ''
+		print "%s no description for %s." % (sys.exc_info()[0].__name__, record['name'])
 	
 	# get chiffre d'affaires
-	items = [unicode(x) for x in bolds]
-	idx = items.index("<b>Chiffre d'affaires:</b>")
-	revenues = bolds[idx].next_sibling
-	record['revenues'] = revenues.strip()
+	try:
+		idx = items.index("<b>Chiffre d'affaires:</b>")
+		revenues = bolds[idx].next_sibling
+		record['revenues'] = revenues.strip()
+	except:
+		record['revenues'] = ''
+		print "%s no revenues for %s." % (sys.exc_info()[0].__name__, record['name'])
 	
-	#print "Record:", record
 	return record
 
 
@@ -81,15 +106,34 @@ def split_name_and_title(string):
 	return [x.strip() for x in nameandtitle]
 
 
+def get_mesi_urls():
+	""" Loads html containing the links to company pages. """
+	
+	with open("Data/a.html", 'r') as f:
+		html = f.read()
+		soup = BeautifulSoup(html, 'html5lib')
+		links = soup.find_all('a')
+		urls = ["http://internet2.economie.gouv.qc.ca" + str(link['href']) for link in links]
+	
+	return urls
+
 
 if __name__ == "__main__":
 	# hack for dealing with accented text
 	reload(sys)
 	sys.setdefaultencoding('utf-8')
 	
+	companies = get_mesi_urls()
+	#sys.exit()
+	
+	
 	# page specific setup
-	companies = ["http://internet2.economie.gouv.qc.ca/Internet/aerospatiale/reperaero.nsf/bd4b8ac1bdeea6ee0525694b007576fd/b71d7e43c24254b685257b330050b1b6?OpenDocument",
-				"http://internet2.economie.gouv.qc.ca/Internet/aerospatiale/reperaero.nsf/bd4b8ac1bdeea6ee0525694b007576fd/d57c1a3c1348629e85257b3200715b94?OpenDocument"]
+	"""
+	companies = ["http://internet2.economie.gouv.qc.ca/Internet/aerospatiale/reperaero.nsf/bd4b8ac1bdeea6ee0525694b007576fd/905426df69f342a985257ec0002146d8?OpenDocument",
+				"http://internet2.economie.gouv.qc.ca/Internet/aerospatiale/reperaero.nsf/bd4b8ac1bdeea6ee0525694b007576fd/097aeedcac7ea4de85257b3200715bc0?OpenDocument",
+				"http://internet2.economie.gouv.qc.ca/Internet/aerospatiale/reperaero.nsf/bd4b8ac1bdeea6ee0525694b007576fd/c06a60a8d08182f885257b32007164cc?OpenDocument",
+				"http://internet2.economie.gouv.qc.ca/Internet/aerospatiale/reperaero.nsf/bd4b8ac1bdeea6ee0525694b007576fd/11323676470757f285257b320071648b?OpenDocument"]
+	"""
 	record_list =[]
 	
 	# iterate through a list of company pages
@@ -98,7 +142,6 @@ if __name__ == "__main__":
 		if html:
 			record_list.append(parse_mesi_company_page(html))
 			
-		
 	# write records to csv
 	output_filename = 'Data/mesi.csv'
 	fields = ['name', 'contact1', 'title1', 'contact2', 'title2','phone', 'fax', 'email', 'website', 'revenues', 'description']
