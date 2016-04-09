@@ -3,8 +3,8 @@
 import sys
 import re
 from bs4 import BeautifulSoup
-from generic import get_html
-from generic import write_to_csv
+from utils import get_html
+from utils import write_to_csv
 
 def parse_mesi_company_page(raw_html):
 	""" Parses the info from a company page. """

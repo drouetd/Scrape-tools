@@ -1,7 +1,9 @@
-#!/usr/bin/env python
+# -*- coding: utf-8 -*-
 
+import sys
 import re
 from bs4 import BeautifulSoup
+from utils import get_html, write_to_csv
 
 def parse_aero(raw_html):
 	""" Extracts membership list from Aero Montreal website """
@@ -35,4 +37,24 @@ def parse_aero(raw_html):
 		
 	return membership
 
+
+if __name__ == "__main__":
+
+	# page specific setup
+	page_url = ""
+	output_filename = 'Data/aero.csv'
+	fields = []
+
+	# hack for dealing with accented text
+	reload(sys)
+	sys.setdefaultencoding('utf-8')
+
+	# read single page and extract data
+	html = get_html(page_url)
+	if html:
+		record_list = parse_aero(html)
+		print record_list
+
+	# write records to csv
+	write_to_csv(output_filename, fields, record_list)
 
